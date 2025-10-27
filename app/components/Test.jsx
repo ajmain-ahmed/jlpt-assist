@@ -77,8 +77,8 @@ export default function Test() {
 
     // force card count to be > 1 and < 100 and not a word
     useEffect(() => {
-        if ((cardCount < 1 || isNaN(cardCount)) && cardCount != '') {
-            setCardCount(1)
+        if ((cardCount < 20 || isNaN(cardCount)) && cardCount != '') {
+            setCardCount(20)
         }
         if (cardCount > 100) {
             setCardCount(100)
