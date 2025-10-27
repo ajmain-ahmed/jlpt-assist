@@ -88,7 +88,7 @@ export default function Test() {
     // detects when all cards have either a true/false result, and fills in the parcel
     useEffect(() => {
         // fill in parcel
-        if (testCards) {
+        if (testCards && session) {
             const correctCards = testCards.filter(x => x.result === true)
             const incorrectCards = testCards.filter(x => x.result === false)
             const toBeCorrect = correctCards.filter(x => !userKnownWordIds.includes(x.id))
@@ -274,36 +274,6 @@ export default function Test() {
 
     return (
         <Container>
-
-            {/* level dialog */}
-            {(vocab && userKnownWordIds) &&
-                <Dialog open={levelDia} onClose={() => openLevelDia(false)}>
-                    <DialogTitle sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>
-                        Please choose an N-level
-                    </DialogTitle>
-                    <List sx={{ pt: 0 }}>
-                        {Object.keys(vocab).map((x, index) => (
-                            <ListItem key={index}>
-                                <ListItemButton onClick={() => {
-                                    if (level != x) {
-                                        setLevel(x)
-                                        openLevelDia(false)
-                                        localStorage.setItem('level', x)
-                                        localStorage.setItem('page', 1)
-                                    }
-                                    else {
-                                        openLevelDia(false)
-                                    }
-                                }}>
-                                    <ListItemText sx={{ textAlign: 'center', fontSize: { xs: '0.9rem', md: '1.2rem' } }}>
-                                        {x.toUpperCase()}
-                                    </ListItemText>
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
-                    </List>
-                </Dialog>
-            }
 
             {/* quiz settings */}
             <Dialog sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} open={settingsDia}>
@@ -548,7 +518,7 @@ export default function Test() {
 
             {/* when the test cards get filled */}
             <Snackbar
-                sx={{width:'70%'}}
+                sx={{ width: '70%' }}
                 open={fillNotif}
                 autoHideDuration={4000}
                 message={fillMsg}
@@ -562,19 +532,8 @@ export default function Test() {
                     <Box sx={{ pt: 1 }}>
                         <ToggleButtonGroup disabled={(session) && (!userKnownWordIds)} size={matches ? 'medium' : 'medium'}>
 
-                            <ToggleButton onClick={() => { !testOn && openLevelDia(true) }} sx={{ borderColor: '#d32f2f' }}>
-                                {
-                                    (level === 'n1') ? <LooksOne color={testOn ? '' : 'error'} /> :
-                                        (level === 'n2') ? <LooksTwo color={testOn ? '' : 'error'} /> :
-                                            (level === 'n3') ? <Looks3 color={testOn ? '' : 'error'} /> :
-                                                (level === 'n4') ? <Looks4 color={testOn ? '' : 'error'} /> :
-                                                    (level === 'n5') ? <Looks5 color={testOn ? '' : 'error'} /> :
-                                                        null
-                                }
-                            </ToggleButton>
-
-                            <ToggleButton onClick={() => openSettingsDia(true)} size='small' sx={{ borderColor: '#d32f2f', px: { md: 1.4, xs: 1.4 } }}>
-                                <SettingsIcon fontSize={matches ? 'medium' : 'small'} color='error' />
+                            <ToggleButton onClick={() => openSettingsDia(true)} size={matches ? 'medium' : 'medium'} sx={{ borderColor: '#d32f2f', px: { md: 1.4, xs: 1.4 } }}>
+                                <SettingsIcon fontSize={matches ? 'medium' : 'medium'} color='error' />
                             </ToggleButton>
 
                             <ToggleButton
@@ -587,12 +546,12 @@ export default function Test() {
                                     }
                                 }}
                                 variant='contained'
-                                size='small'
+                                size={matches ? 'medium' : 'medium'}
                                 sx={{ borderColor: '#d32f2f', px: { md: 1.3, xs: 1.3 } }}
                             >
                                 {(testOn) ?
-                                    <StopIcon fontSize={matches ? 'medium' : 'small'} color='error' /> :
-                                    <PlayArrowIcon fontSize={matches ? 'medium' : 'small'} color='error' />
+                                    <StopIcon fontSize={matches ? 'medium' : 'medium'} color='error' /> :
+                                    <PlayArrowIcon fontSize={matches ? 'medium' : 'medium'} color='error' />
                                 }
                             </ToggleButton>
 
@@ -602,10 +561,10 @@ export default function Test() {
                                 }
                             }}
                                 variant='contained'
-                                size='small'
+                                size={matches ? 'medium' : 'medium'}
                                 sx={{ borderColor: '#d32f2f', px: { md: 1.3, xs: 1.3 } }}
                             >
-                                <SportsScoreIcon fontSize={matches ? 'medium' : 'small'} color={testComplete ? 'error' : ''} />
+                                <SportsScoreIcon fontSize={matches ? 'medium' : 'medium'} color={testComplete ? 'error' : ''} />
                             </ToggleButton>
                         </ToggleButtonGroup>
                     </Box>
