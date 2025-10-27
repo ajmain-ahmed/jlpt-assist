@@ -22,26 +22,6 @@ const Navbar = () => {
     }
 
     useEffect(() => {
-        if (!localStorage.getItem("mode")) {
-            localStorage.setItem('mode', 'light')
-            setMode('light')
-        }
-        else {
-            setMode(localStorage.getItem('mode'))
-        }
-    }, [])
-
-    useEffect(() => {
-        const handler = (event) => {
-            if (event.key === 'mode') {
-                setMode(event.newValue)
-            }
-        }
-        window.addEventListener("storage", handler)
-        return () => window.removeEventListener("storage", handler)
-    }, [])
-
-    useEffect(() => {
         if (!localStorage.getItem("pullFromDb")) {
             localStorage.setItem('pullFromDb', 'false')
         }
@@ -67,7 +47,6 @@ const Navbar = () => {
                                 <Box sx={{ display: { xs: 'none', md: 'flex', gap: 5 } }}>
                                     <Button onClick={() => redirect('/vocabulary')} variant='text' sx={{ color: 'white', fontWeight: '600' }}>Vocabulary</Button>
                                     <Button onClick={() => redirect('/test')} variant='text' sx={{ color: 'white', fontWeight: '600' }}>Test</Button>
-                                    <Button onClick={() => redirect('/review')} variant='text' sx={{ color: 'white', fontWeight: '600' }}>Review</Button>
                                 </Box>
 
                             </Box>
@@ -95,8 +74,10 @@ const Navbar = () => {
                                                 {username[0].toUpperCase()}
                                             </Avatar>
                                             <Menu anchorEl={avatarAnchorEl} open={Boolean(avatarAnchorEl)} onClose={() => setAvatarAnchorEl(null)}>
+                                                <MenuItem component={Link} href='/profile'>Profile</MenuItem>
                                                 <MenuItem onClick={() => signOutHelper()}>Logout</MenuItem>
                                             </Menu>
+
                                         </>
                                         :
                                         <Button
@@ -116,21 +97,6 @@ const Navbar = () => {
                                 >
                                     <MenuItem component={Link} href='/vocabulary' sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Vocabulary</MenuItem>
                                     <MenuItem component={Link} href='/test' sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Test</MenuItem>
-                                    <MenuItem component={Link} href='/review' sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Review</MenuItem>
-                                    <MenuItem onClick={() => {
-                                        if (mode === 'light') {
-                                            localStorage.setItem('mode', 'dark')
-                                            window.dispatchEvent(new StorageEvent('storage', { key: 'mode', newValue: 'dark' }))
-                                            setMode('dark')
-                                        }
-                                        else if (mode === 'dark') {
-                                            localStorage.setItem('mode', 'light')
-                                            window.dispatchEvent(new StorageEvent('storage', { key: 'mode', newValue: 'light' }))
-                                            setMode('light')
-                                        }
-                                    }}>
-                                        {(mode === 'light') ? 'Dark Mode' : 'Light Mode'}
-                                    </MenuItem>
                                 </Menu>
                             </Box>
                         </Box>

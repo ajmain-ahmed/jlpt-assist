@@ -14,8 +14,6 @@ const Banner = () => {
 
     const MobileHomepage = () => {
 
-        const [mode, setMode] = useState('light')
-
         // getting user session if it exists
         const { data: session, status } = useSession()
         const userid = session?.user?.userId
@@ -151,23 +149,6 @@ const Banner = () => {
             setIncorrectCount(incorrect)
 
         }, [exampleWords])
-
-
-        useEffect(() => {
-            if (localStorage.getItem('mode')) {
-                setMode(localStorage.getItem('mode'))
-            }
-        }, [])
-
-        useEffect(() => {
-            const handler = (event) => {
-                if (event.key === 'mode') {
-                    setMode(event.newValue)
-                }
-            }
-            window.addEventListener("storage", handler)
-            return () => window.removeEventListener("storage", handler)
-        }, [])
 
         // for the more info button
         const moreInfo = useRef(null)
@@ -526,7 +507,7 @@ const Banner = () => {
                         justifyContent: 'center',
                         flexDirection: 'column',
                         width: '100%',
-                        backgroundColor: mode === 'light' ? '#ffebee' : 'rgba(255, 255, 255, 0.08)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
                         mt: 5,
                         pt: 10,
                         pb: 15

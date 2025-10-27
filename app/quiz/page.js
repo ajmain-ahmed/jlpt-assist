@@ -7,11 +7,9 @@ import { SessionProvider } from "next-auth/react";
 export default function NewQuizMasterFunction() {
 
     return (
-        <>
-            <SessionProvider>
-                <Navbar />
-                <NewQuizMaster />
-            </SessionProvider>
-        </>
+        <SessionProvider>
+            <Navbar />
+            <NewQuizMaster />
+        </SessionProvider>
     )
 }

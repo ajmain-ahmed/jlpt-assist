@@ -17,13 +17,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (token?.email && !token.userId) {
                 const { data } = await supabaseServerside
                     .from('users')
-                    .select('username, user_id')
+                    .select('username, user_id, created_at')
                     .eq('email', token.email)
                     .maybeSingle()
 
                 if (data) {
                     token.username = data.username;
                     token.userId = data.user_id
+                    token.createdAt = data.created_at
                 }
             }
             return token
@@ -32,6 +33,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         async session({ session, token }) {
             if (token.username) session.user.username = token.username
             if (token.userId) session.user.userId = token.userId
+            if (token.createdAt) session.user.createdAt = token.createdAt
             return session
         }
     }

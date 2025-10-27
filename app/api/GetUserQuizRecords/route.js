@@ -20,7 +20,7 @@ export async function POST(request) {
 
         const { data, error } = await supabase
             .from('quiz_sessions')
-            .select('quiz_id, n_level, quiz_type, random, correct, incorrect, start_from, created_at')
+            .select('quiz_id, n_level, quiz_type, random, correct, incorrect, created_at')
             .eq('user_id', userid)
 
         if (data) {

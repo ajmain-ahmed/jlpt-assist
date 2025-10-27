@@ -7,11 +7,9 @@ import { SessionProvider } from "next-auth/react";
 export default function NewTest() {
 
     return (
-        <>
-            <SessionProvider>
-                <Navbar />
-                <Test />
-            </SessionProvider>
-        </>
+        <SessionProvider>
+            <Navbar />
+            <Test />
+        </SessionProvider>
     )
 }

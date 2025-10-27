@@ -1,7 +1,7 @@
 'use client'
 
 import { ArticleOutlined, CheckBoxOutlineBlankRounded, DeleteForever, DeleteForeverOutlined, DoneAll, Expand, InfoOutline, KeyboardArrowDown, KeyboardArrowDownOutlined, KeyboardArrowUpOutlined, Looks3, Looks4, Looks5, LooksOne, LooksTwo, ManageSearchOutlined, UnfoldLess, X } from "@mui/icons-material";
-import { Alert, Box, Button, Card, CardContent, Checkbox, CircularProgress, Collapse, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, List, ListItem, ListItemButton, ListItemText, Pagination, Skeleton, Table, TableBody, TableCell, TableContainer, TableRow, TextField, ToggleButton, ToggleButtonGroup, Typography, useMediaQuery, useTheme } from "@mui/material"
+import { Alert, Box, Button, Card, CardContent, Checkbox, CircularProgress, Collapse, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, List, ListItem, ListItemButton, ListItemText, Pagination, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, ToggleButton, ToggleButtonGroup, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useSession } from "next-auth/react";
 import React, { useEffect, useRef, useState } from "react"
 import { useVocab } from "../VocabDataProvider";
@@ -39,22 +39,6 @@ export default function VocabTable() {
     const [searchQuery, setSearchQuery] = useState('')
 
     const [untickAllSelect, openUntickAllSelect] = useState(false)
-
-    // fetch all jlpt vocab data once on mount
-    // useEffect(() => {
-    //     if (!flagA.current) {
-    //         fetch('/api/FetchJlpt')
-    //             .then(response => response.json())
-    //             .then(data => {
-    //                 setVocab(data.message)
-    //                 console.log('all vocab data', data.message)
-    //             })
-    //             .finally(
-    //                 flagA.current = true
-    //             )
-    //     }
-
-    // }, [])
 
     // show/hide intro dialog based on ls
     useEffect(() => {
@@ -250,38 +234,49 @@ export default function VocabTable() {
                 <DialogTitle sx={{ fontSize: '1.25rem', textAlign: 'center', mb: 0 }}>
                     Vocabulary Table
                 </DialogTitle>
-                <DialogContent sx={{}}>
+                <DialogContent sx={{pb:0}}>
 
                     <Box>
                         <Alert icon={false} severity='info' sx={{ mb: 2, textAlign: 'center', fontSize: { xs: '1rem', md: '1.2rem' } }}>
                             Tick words you're familiar with, you must be logged in to use the vocabulary table.
                         </Alert>
 
-                        <Card>
-                            <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.2 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', justifyContent: 'left' }}>
-                                    <LooksOne /><Typography sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>N-level selection</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', justifyContent: 'left' }}>
-                                    <Expand /><Typography sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>Expand all</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', justifyContent: 'left' }}>
-                                    <UnfoldLess /><Typography sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>Collapse all</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', justifyContent: 'left' }}>
-                                    <DoneAll /><Typography sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>Tick all on page</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', justifyContent: 'left' }}>
-                                    <CheckBoxOutlineBlankRounded /><Typography sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>Untick all on page</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', justifyContent: 'left' }}>
-                                    <ManageSearchOutlined /><Typography sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>Search word/page number</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center', justifyContent: 'left' }}>
-                                    <DeleteForeverOutlined /><Typography sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>Remove all data for level</Typography>
-                                </Box>
-                            </CardContent>
-                        </Card>
+                        <TableContainer sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2, mb: 2 }}>
+                            <Table size={!matches && 'small'} sx={{ width: { xs: '100%', md: '35%' }, border: 2 }}>
+                                <TableHead>
+                                    <TableRow>
+                                        {
+                                            ['Level', 'Total', 'Known', 'Completion'].map((x, index) => (
+                                                <TableCell sx={{ textAlign: 'center', padding: 1 }} key={index}>
+                                                    {x}
+                                                </TableCell>
+                                            ))
+                                        }
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {Object.keys(vocab).map((x, index) => (
+                                        <TableRow selected={x === level} onClick={() => setLevel(x)} key={index}>
+                                            <TableCell sx={{ textAlign: 'center', padding: 1 }}>
+                                                {x.toUpperCase()}
+                                            </TableCell>
+                                            <TableCell sx={{ textAlign: 'center', padding: 1 }}>
+                                                {vocab[x].length}
+                                            </TableCell>
+                                            <TableCell sx={{ textAlign: 'center', padding: 1 }}>
+                                                {vocab[x].filter(y => userKnownWordIds.includes(y.id)).length}
+                                            </TableCell>
+                                            <TableCell sx={{ textAlign: 'center', padding: 1 }}>
+                                                {`${Math.floor(
+                                                    (vocab[x].filter(y => userKnownWordIds.includes(y.id)).length /
+                                                        vocab[x].length) * 100
+                                                )}%`}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     </Box>
                 </DialogContent>
 

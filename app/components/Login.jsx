@@ -1,21 +1,15 @@
 'use client'
-import { Google, Info } from "@mui/icons-material";
+import { Google } from "@mui/icons-material";
 import {
   Box,
   Button,
   CardContent,
-  Checkbox,
   Container,
-  Divider,
-  FormControlLabel,
   Card,
-  TextField,
   Typography,
   Alert,
-  CssBaseline,
 } from "@mui/material";
 import GoogleSignIn from "../serveraction";
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const LoginLogout = () => {
 

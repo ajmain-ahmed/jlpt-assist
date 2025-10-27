@@ -21,7 +21,7 @@ export default function Test() {
     const flagB = useRef(false)
 
     const [vocab, setVocab] = useState(useVocab())
-    const [userKnownWordIds, setUserKnownWordIds] = useState([])
+    const [userKnownWordIds, setUserKnownWordIds] = useState()
     const [ukwidByLevel, setUkwidByLevel] = useState({ 'n1': [], 'n2': [], 'n3': [], 'n4': [], 'n5': [] })
 
     const [level, setLevel] = useState('n1')
@@ -49,22 +49,6 @@ export default function Test() {
     const [fillNotif, toggleFillNotif] = useState(false)
     const [fillMsg, setFillMsg] = useState('')
 
-    // fetch all jlpt vocab data once on mount
-    // useEffect(() => {
-    //     if (!flagA.current) {
-    //         fetch('/api/FetchJlpt')
-    //             .then(response => response.json())
-    //             .then(data => {
-    //                 setVocab(data.message)
-    //                 console.log('all vocab data', data.message)
-    //             })
-    //             .finally(
-    //                 flagA.current = true
-    //             )
-    //     }
-
-    // }, [])
-
     // fetch user known word ids once status is verified
     useEffect(() => {
         if (status === 'authenticated' && !flagB.current) {
@@ -82,7 +66,7 @@ export default function Test() {
 
     // set ukwid by level once jlpt and user word id is present
     useEffect(() => {
-        if (userKnownWordIds.length > 0 && vocab && session) {
+        if (userKnownWordIds && vocab && session) {
             Object.keys(vocab).forEach(level => {
                 const levelData = vocab[level]
                 const levelWordIDs = levelData.map(word => word.id)
@@ -292,7 +276,7 @@ export default function Test() {
         <Container>
 
             {/* level dialog */}
-            {(vocab && userKnownWordIds.length > 0) &&
+            {(vocab && userKnownWordIds) &&
                 <Dialog open={levelDia} onClose={() => openLevelDia(false)}>
                     <DialogTitle sx={{ fontSize: { xs: '0.9rem', md: '1.2rem' } }}>
                         Please choose an N-level
@@ -576,7 +560,7 @@ export default function Test() {
 
                     {/* toolbar */}
                     <Box sx={{ pt: 1 }}>
-                        <ToggleButtonGroup size={matches ? 'medium' : 'medium'}>
+                        <ToggleButtonGroup disabled={(session) && (!userKnownWordIds)} size={matches ? 'medium' : 'medium'}>
 
                             <ToggleButton onClick={() => { !testOn && openLevelDia(true) }} sx={{ borderColor: '#d32f2f' }}>
                                 {
@@ -735,7 +719,7 @@ export default function Test() {
                             Set the test configuration before running, a test can hold between 20 and 100 cards inclusive.
                         </Alert>
 
-                        {(vocab && userKnownWordIds.length > 0) &&
+                        {(vocab && userKnownWordIds) &&
                             <TableContainer sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2, mb: 2 }}>
                                 <Table size={!matches && 'small'} sx={{ width: { xs: '100%', md: '35%' }, border: 2 }}>
                                     <TableHead>
