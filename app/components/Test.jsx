@@ -1,4 +1,4 @@
-import { Container, ToggleButton, ToggleButtonGroup, Box, useTheme, useMediaQuery, Typography, Button, Alert, Collapse, Paper, TableContainer, Table, TableRow, TableCell, TableHead, TableBody, Dialog, DialogTitle, List, ListItem, ListItemButton, ListItemText, DialogContent, Card, CardContent, Slider, Divider, FormControlLabel, Switch, TextField, DialogActions, Input, Grid, DialogContentText, FormGroup, Checkbox, CircularProgress } from "@mui/material";
+import { Container, ToggleButton, ToggleButtonGroup, Box, useTheme, useMediaQuery, Typography, Button, Alert, Collapse, Paper, TableContainer, Table, TableRow, TableCell, TableHead, TableBody, Dialog, DialogTitle, List, ListItem, ListItemButton, ListItemText, DialogContent, Card, CardContent, Slider, Divider, FormControlLabel, Switch, TextField, DialogActions, Input, Grid, DialogContentText, FormGroup, Checkbox, CircularProgress, Snackbar } from "@mui/material";
 import LooksOne from "@mui/icons-material/LooksOne";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
@@ -7,7 +7,7 @@ import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import { ArrowLeftOutlined, ArrowRightOutlined, CancelOutlined, Check, Clear, DoneOutline, Looks3, Looks4, Looks5, LooksTwo, Quiz, Start, VisibilityOff } from "@mui/icons-material";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { v4 as uuidv4 } from 'uuid';
+import { useVocab } from "../VocabDataProvider";
 
 export default function Test() {
 
@@ -20,8 +20,9 @@ export default function Test() {
     const flagA = useRef(false)
     const flagB = useRef(false)
 
-    const [vocab, setVocab] = useState()
+    const [vocab, setVocab] = useState(useVocab())
     const [userKnownWordIds, setUserKnownWordIds] = useState([])
+    const [ukwidByLevel, setUkwidByLevel] = useState({ 'n1': [], 'n2': [], 'n3': [], 'n4': [], 'n5': [] })
 
     const [level, setLevel] = useState('n1')
     const [type, setType] = useState('all')
@@ -45,21 +46,24 @@ export default function Test() {
     const [dbSubmissionStatus, setDBSubmissionStatus] = useState()
     const [submissionCollapse, setSubmissionCollapse] = useState(false)
     const [loadingSubmission, setLoadingSubmission] = useState(false)
+    const [fillNotif, toggleFillNotif] = useState(false)
+    const [fillMsg, setFillMsg] = useState('')
 
     // fetch all jlpt vocab data once on mount
-    useEffect(() => {
-        if (!flagA.current) {
-            fetch('/api/FetchJlpt')
-                .then(response => response.json())
-                .then(data => {
-                    setVocab(data.message)
-                    console.log('all vocab data', data.message)
-                })
-                .finally(
-                    flagA.current = true
-                )
-        }
-    }, [])
+    // useEffect(() => {
+    //     if (!flagA.current) {
+    //         fetch('/api/FetchJlpt')
+    //             .then(response => response.json())
+    //             .then(data => {
+    //                 setVocab(data.message)
+    //                 console.log('all vocab data', data.message)
+    //             })
+    //             .finally(
+    //                 flagA.current = true
+    //             )
+    //     }
+
+    // }, [])
 
     // fetch user known word ids once status is verified
     useEffect(() => {
@@ -75,6 +79,17 @@ export default function Test() {
                 )
         }
     }, [status])
+
+    // set ukwid by level once jlpt and user word id is present
+    useEffect(() => {
+        if (userKnownWordIds.length > 0 && vocab && session) {
+            Object.keys(vocab).forEach(level => {
+                const levelData = vocab[level]
+                const levelWordIDs = levelData.map(word => word.id)
+                setUkwidByLevel(prev => ({ ...prev, [level]: userKnownWordIds.filter(id => levelWordIDs.includes(id)) }))
+            })
+        }
+    }, [userKnownWordIds, vocab, session])
 
     // force card count to be > 1 and < 100 and not a word
     useEffect(() => {
@@ -114,6 +129,16 @@ export default function Test() {
 
     }, [testCards])
 
+    // preventing a level/type bug
+    useEffect(() => {
+        // levels that can use used for known test
+        const safeKnownLevels = Object.keys(ukwidByLevel).filter(x => ukwidByLevel[x].length >= 20)
+        const fallBack = safeKnownLevels[0]
+        if (type === 'known' && ukwidByLevel[level].length < 20) {
+            setLevel(fallBack)
+        }
+    }, [level, type])
+
     // randomise vocab array
     function shuffle(array) {
         let currentIndex = array.length;
@@ -145,6 +170,36 @@ export default function Test() {
             setTestCards(slicedCards)
             console.log('sliced cards', slicedCards)
             setTestOn(true)
+        }
+
+        if (type === 'known') {
+            const knownCards = testCards.filter(x => ukwidByLevel[level].includes(x.id))
+            const slicedCards = knownCards.slice(0, cardCount)
+            setTestCards(slicedCards)
+            console.log('sliced cards', slicedCards)
+            setTestOn(true)
+        }
+
+        if (type === 'unknown') {
+            const unknownCards = testCards.filter(x => !ukwidByLevel[level].includes(x.id))
+            // if there are not enough unknown cards to cover the number of cards the user wants...
+            if (unknownCards.length < cardCount) {
+                const fillCards = testCards.filter(x => ukwidByLevel[level].includes(x.id))
+                shuffle(fillCards)
+                const slicedCards = fillCards.slice(0, cardCount - unknownCards.length)
+                const concatCards = unknownCards.concat(slicedCards)
+                setTestCards(concatCards)
+                setFillMsg(`Test partially filled with +${slicedCards.length} cards`)
+                toggleFillNotif(true)
+                console.log('concat cards', concatCards)
+                setTestOn(true)
+            }
+            else {
+                const slicedCards = unknownCards.slice(0, cardCount)
+                setTestCards(slicedCards)
+                console.log('sliced cards', slicedCards)
+                setTestOn(true)
+            }
         }
     }
 
@@ -284,11 +339,36 @@ export default function Test() {
                                 size={matches ? 'medium' : 'small'}
                                 sx={{ mt: 2 }
                                 }>
-                                <ToggleButton value='n1'>N1</ToggleButton>
-                                <ToggleButton value='n2'>N2</ToggleButton>
-                                <ToggleButton value='n3'>N3</ToggleButton>
-                                <ToggleButton value='n4'>N4</ToggleButton>
-                                <ToggleButton value='n5'>N5</ToggleButton>
+                                <ToggleButton
+                                    value='n1'
+                                    disabled={type === 'known' && ukwidByLevel['n1'].length < 20}
+                                >
+                                    N1
+                                </ToggleButton>
+                                <ToggleButton
+                                    disabled={type === 'known' && ukwidByLevel['n2'].length < 20}
+                                    value='n2'
+                                >
+                                    N2
+                                </ToggleButton>
+                                <ToggleButton
+                                    disabled={type === 'known' && ukwidByLevel['n3'].length < 20}
+                                    value='n3'
+                                >
+                                    N3
+                                </ToggleButton>
+                                <ToggleButton
+                                    disabled={type === 'known' && ukwidByLevel['n4'].length < 20}
+                                    value='n4'
+                                >
+                                    N4
+                                </ToggleButton>
+                                <ToggleButton
+                                    disabled={type === 'known' && ukwidByLevel['n5'].length < 20}
+                                    value='n5'
+                                >
+                                    N5
+                                </ToggleButton>
                             </ToggleButtonGroup>
 
                             <ToggleButtonGroup
@@ -300,8 +380,16 @@ export default function Test() {
                                 size={matches ? 'medium' : 'small'}
                                 sx={{ mt: 2 }}>
                                 <ToggleButton value='all'>All Cards</ToggleButton>
-                                <ToggleButton disabled={!session} value='known'>Known</ToggleButton>
-                                <ToggleButton disabled={!session} value='unknown'>Unknown</ToggleButton>
+                                <ToggleButton
+                                    disabled={!session || Object.values(ukwidByLevel).every(level => level.length < 20)}
+                                    value='known'>
+                                    Known
+                                </ToggleButton>
+                                <ToggleButton
+                                    disabled={!session}
+                                    value='unknown'>
+                                    Unknown
+                                </ToggleButton>
                             </ToggleButtonGroup>
 
                             <Divider sx={{ mt: 2, width: '80%' }} />
@@ -476,7 +564,14 @@ export default function Test() {
                 </DialogActions>
             </Dialog>
 
-
+            {/* when the test cards get filled */}
+            <Snackbar
+                sx={{width:'70%'}}
+                open={fillNotif}
+                autoHideDuration={4000}
+                message={fillMsg}
+                onClose={() => toggleFillNotif(false)}
+            />
 
             <Paper sx={{ mt: 5, borderRadius: '16px', py: 1.5, px: 2, mb: 10 }}>
                 <Box sx={{ textAlign: 'center' }}>

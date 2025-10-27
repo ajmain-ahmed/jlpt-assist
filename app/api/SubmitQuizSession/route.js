@@ -58,7 +58,7 @@ export async function POST(request) {
         }
 
         if (errors.metaE === '' && errors.resultE === '') {
-            return NextResponse.json({ message: 'Quiz metadata and results saved!', status: 200 })
+            return NextResponse.json({ message: 'Quiz metadata and results saved!', status: 200 })  
         }
 
         else {
