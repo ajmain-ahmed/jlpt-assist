@@ -42,7 +42,7 @@ export default async function RootLayout({ children }) {
 
   return (
 
-    < html lang="en" className={quicksand.className} >
+    < html lang="en" className={quicksand.className}>
       <body>
         <VocabDataProvider initialVocab={allData}>
           <MuiThemeProvider>
