@@ -21,14 +21,11 @@ export async function POST(request) {
     const random = body.random
     const correct = body.correct
     const incorrect = body.incorrect
-    const quizResults = body.quizResults
 
     if (session) {
 
-        const errors = { metaE: '', resultE: '' }
-
         // attempting to submit test session metadata
-        const { error: metaError } = await supabase
+        const { error } = await supabase
             .from("quiz_sessions")
             .insert({
                 quiz_id: quizID,
@@ -40,29 +37,12 @@ export async function POST(request) {
                 incorrect: incorrect
             })
 
-        if (metaError) {
-            errors.metaE = metaError
-        }
-
-        // attempting to submit actual test result data
-        const bulkInsert = quizResults.map(x => (
-            { quiz_id: quizID, user_id: userID, word_id: x.wordID, is_correct: x.result }
-        ))
-
-        const { error: resultError } = await supabase
-            .from("quiz_results")
-            .insert(bulkInsert)
-
-        if (resultError) {
-            errors.resultE = resultError
-        }
-
-        if (errors.metaE === '' && errors.resultE === '') {
-            return NextResponse.json({ message: 'Quiz metadata and results saved!', status: 200 })  
+        if (error) {
+            return NextResponse.json({ message: `metadata submission error: ${error}` }, { status: 422 })
         }
 
         else {
-            return NextResponse.json({ message: `metadata submission error: ${errors.metaE} | result submission error: ${errors.resultE}` }, { status: 422 })
+            return NextResponse.json({ message: 'Quiz metadata and results saved!', status: 200 })
         }
 
     }

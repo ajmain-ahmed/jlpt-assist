@@ -1,11 +1,11 @@
-import { Container, ToggleButton, ToggleButtonGroup, Box, useTheme, useMediaQuery, Typography, Button, Alert, Collapse, Paper, TableContainer, Table, TableRow, TableCell, TableHead, TableBody, Dialog, DialogTitle, List, ListItem, ListItemButton, ListItemText, DialogContent, Card, CardContent, Slider, Divider, FormControlLabel, Switch, TextField, DialogActions, Input, Grid, DialogContentText, FormGroup, Checkbox, CircularProgress, Snackbar } from "@mui/material";
+import { Container, ToggleButton, ToggleButtonGroup, Box, useTheme, useMediaQuery, Typography, Button, Alert, Collapse, Paper, TableContainer, Table, TableRow, TableCell, TableHead, TableBody, Dialog, DialogTitle, List, ListItem, ListItemButton, ListItemText, DialogContent, Card, CardContent, Slider, Divider, FormControlLabel, Switch, TextField, DialogActions, Input, Grid, DialogContentText, FormGroup, Checkbox, CircularProgress, Snackbar, IconButton } from "@mui/material";
 import LooksOne from "@mui/icons-material/LooksOne";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import StopIcon from "@mui/icons-material/Stop";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
-import { ArrowLeftOutlined, ArrowRightOutlined, CancelOutlined, Check, Clear, DoneOutline, Looks3, Looks4, Looks5, LooksTwo, Quiz, Start, VisibilityOff } from "@mui/icons-material";
-import { useEffect, useRef, useState } from "react";
+import { ArrowLeftOutlined, ArrowRightOutlined, Article, CancelOutlined, Check, Clear, DoneOutline, KeyboardArrowDownOutlined, Looks3, Looks4, Looks5, LooksTwo, Quiz, Start, VisibilityOff } from "@mui/icons-material";
+import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useVocab } from "../VocabDataProvider";
 
@@ -24,13 +24,16 @@ export default function Test() {
     const [userKnownWordIds, setUserKnownWordIds] = useState()
     const [ukwidByLevel, setUkwidByLevel] = useState({ 'n1': [], 'n2': [], 'n3': [], 'n4': [], 'n5': [] })
 
+    const [kanjiBank, setKanjiBank] = useState([]) // keeping each kanji so we don't hit the api on repeat opens
+    const [kanjiDia, setKanjiDia] = useState(false)
+    const [kanjiLoading, setKanjiLoading] = useState(false)
+
     const [level, setLevel] = useState('n1')
     const [type, setType] = useState('all')
     const [random, setRadnom] = useState(false)
     const [cardCount, setCardCount] = useState(20)
     const [parcel, setParcel] = useState({ setKnown: [], setUnknown: [] })
 
-    const [levelDia, openLevelDia] = useState(false)
     const [settingsDia, openSettingsDia] = useState(false)
     const [stopDia, openStopDia] = useState(false)
     const [resultsDia, openResultsDia] = useState(false)
@@ -47,7 +50,7 @@ export default function Test() {
     const [submissionCollapse, setSubmissionCollapse] = useState(false)
     const [loadingSubmission, setLoadingSubmission] = useState(false)
     const [fillNotif, toggleFillNotif] = useState(false)
-    const [fillMsg, setFillMsg] = useState('')
+    const [fillMsg, setFillMsg] = useState([])
 
     const allKana = [
         // Hiragana
@@ -113,13 +116,17 @@ export default function Test() {
 
     // force card count to be > 1 and < 100 and not a word
     useEffect(() => {
-        if ((cardCount < 20 || isNaN(cardCount)) && cardCount != '') {
+        // if it's a word
+        if ((isNaN(cardCount)) && cardCount != '') {
             setCardCount(20)
         }
-        if (cardCount > 100) {
-            setCardCount(100)
+        if ((type === 'all' || type === 'unknown') && cardCount > vocab[level].length) {
+            setCardCount(20)
         }
-    }, [cardCount])
+        if (type === 'known' && cardCount > ukwidByLevel[level].length) {
+            setCardCount(20)
+        }
+    }, [cardCount, level, type])
 
     // detects when all cards have either a true/false result, and fills in the parcel
     useEffect(() => {
@@ -176,13 +183,33 @@ export default function Test() {
         }
     }
 
-    //
-    useEffect(() => {
+    // fetching kanji details from external apis when button clicked IF it doesn't exist in kanji bank
+    const fetchKanji = async (testCards, cardNumber) => {
         if (testCards) {
-            const indiv = [...testCards[cardNumber].slug].map(x => (!allKana.includes(x) ? x : null)).filter(x => x != null)
-            const response = fetch(`https://kanjiapi.dev/v1/kanji/${indiv[0]}`).then(res => res.json()).then(data => console.log('kanji data', data))
+            const indiv = [...testCards[cardNumber].slug].map(x => (!allKana.includes(x) ? x : null)).filter(x => x != null).filter(y => !kanjiBank.map(x => x.kanji).includes(y))
+
+            if (indiv.length > 0) {
+
+                setKanjiLoading(true)
+
+                const willResolve = []
+
+                console.log('FETCH RUN')
+
+                indiv.map(async x => {
+                    const response = fetch(`https://kanjiapi.dev/v1/kanji/${x}`).then(res => res.json())
+                    willResolve.push(response)
+                })
+
+                const kanji = await Promise.all(willResolve)
+                console.log('new kanji bank', [...kanjiBank, kanji].flatMap(x => x))
+                setKanjiBank(prev => [...prev, kanji].flatMap(x => x)) // add details to the bank
+
+                setKanjiLoading(false)
+                console.log(kanji)
+            }
         }
-    }, [testCards, cardNumber])
+    }
 
     const startTest = (level, type, random, cardCount) => {
         setSaveToDB(true)
@@ -285,17 +312,12 @@ export default function Test() {
 
         if (saveToDB) {
 
-            const results = testCards.map(x => (
-                { wordID: x.id, result: x.result }
-            ))
-
             const quizSession = {
                 nLevel: level,
                 quizType: type,
                 random: random,
                 correct: testCards.filter(x => x.result === true).length,
                 incorrect: testCards.filter(x => x.result === false).length,
-                quizResults: results
             }
 
             const apiResponse = await fetch('/api/SubmitQuizSession',
@@ -318,6 +340,63 @@ export default function Test() {
 
     return (
         <Container>
+
+            {/* kanji dialog */}
+            <Dialog sx={{}} fullWidth={matches ? true : true} maxWidth={matches ? 'xs' : 'xl'} open={kanjiDia} onClose={() => setKanjiDia(false)}>
+                <DialogContent>
+                    <Paper sx={{ mt: 1, borderRadius: '16px', py: 1.5, px: 2, mb: 10 }}>
+                        <TableContainer>
+                            <Table size="small">
+                                <TableBody>
+                                    {
+                                        (!kanjiLoading) ?
+                                            kanjiBank.filter(x => [...testCards[cardNumber].slug].map(x => (!allKana.includes(x) ? x : null)).filter(x => x != null).includes(x.kanji)).map((x, index) => (
+                                                <React.Fragment key={index}>
+                                                    <TableRow>
+                                                        <TableCell sx={{ padding: 0, py: 0.5, textAlign: 'center', width: '100%' }}>
+                                                            <Typography variant="h6">
+                                                                {x.kanji}
+                                                            </Typography>
+                                                        </TableCell>
+                                                    </TableRow>
+
+                                                    <TableRow>
+                                                        <TableCell colSpan={3} sx={{ padding: 0, py: 1, px: 1 }}>
+                                                            <Collapse in={true}>
+                                                                <Box>
+                                                                    <Typography gutterBottom>
+                                                                        <strong>On:</strong> {x.on_readings.map(onR => onR).join(', ')}
+                                                                    </Typography>
+                                                                    <Typography gutterBottom>
+                                                                        <strong>Kun:</strong> {x.kun_readings.map(kunR => kunR).join(', ')}
+                                                                    </Typography>
+                                                                    <Typography gutterBottom>
+                                                                        {x.meanings.map(meaning => meaning).join(', ')}
+                                                                    </Typography>
+                                                                </Box>
+                                                            </Collapse>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </React.Fragment>
+                                            ))
+                                            :
+                                            <TableRow>
+                                                <TableCell sx={{ textAlign: 'center' }}>
+                                                    <Typography>
+                                                        <CircularProgress color="error" size="25px" />
+                                                    </Typography>
+                                                </TableCell>
+                                            </TableRow>
+                                    }
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Paper>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setKanjiDia(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
 
             {/* quiz settings */}
             <Dialog sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} open={settingsDia}>
@@ -401,6 +480,7 @@ export default function Test() {
 
                             <Box sx={{ minWidth: '100%', mt: 2, display: 'flex', gap: 1 }}>
                                 <TextField
+                                    error={cardCount < 20}
                                     disabled={testOn}
                                     sx={{ minWidth: '100%' }}
                                     size={matches ? 'medium' : 'small'}
@@ -408,6 +488,11 @@ export default function Test() {
                                     value={cardCount}
                                     label="Number of Cards"
                                     onChange={(e) => setCardCount(e.target.value)}
+                                    helperText={
+                                        (type === 'all' || type === 'unknown') ?
+                                            `Min: 20, Max: ${vocab[level].length}` :
+                                            `Min: 20, Max: ${ukwidByLevel[level].length}`
+                                    }
                                 />
                             </Box>
 
@@ -417,7 +502,7 @@ export default function Test() {
                 <DialogActions sx={{ pt: 0.5 }}>
                     <Button
                         onClick={() => {
-                            if (cardCount === '') {
+                            if (cardCount === '' || cardCount < 20) {
                                 setCardCount(20)
                                 openSettingsDia(false)
                             }
@@ -599,6 +684,24 @@ export default function Test() {
                                 }
                             </ToggleButton>
 
+                            <ToggleButton
+                                onClick={() => {
+                                    if (testOn) {
+                                        fetchKanji(testCards, cardNumber)
+                                        setKanjiDia(true)
+                                    }
+                                }}
+                                variant='contained'
+                                size={matches ? 'medium' : 'medium'}
+                                sx={{ borderColor: '#d32f2f', px: { md: 1.3, xs: 1.3 } }}
+                            >
+                                <Article
+                                    fontSize={matches ? 'medium' : 'medium'}
+                                    color={testOn ? 'error' : ''}
+                                />
+                            </ToggleButton>
+
+
                             <ToggleButton onClick={() => {
                                 if (testComplete) {
                                     openResultsDia(true)
@@ -719,7 +822,7 @@ export default function Test() {
                     <Collapse timeout={{ enter: 400, exit: 400 }} in={!testOn}>
 
                         <Alert icon={false} severity='info' sx={{ mb: 1, mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: { xs: '1rem', md: '1.2rem' } }}>
-                            Set the test configuration before running, a test can hold between 20 and 100 cards inclusive.
+                            Set the test configuration before running.
                         </Alert>
 
                         {(vocab && userKnownWordIds) &&

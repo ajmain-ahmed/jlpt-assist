@@ -37,7 +37,7 @@ export default function ProfileComponent() {
     }
 
     const deleteRecord = async (qid) => {
-        if (userid) {
+        if (username) {
             const request = await fetch('api/DeleteRecord',
                 {
                     method: 'POST',
@@ -121,7 +121,7 @@ export default function ProfileComponent() {
         <Container sx={{}}>
 
             <Snackbar
-                sx={{ width: '70%' }}
+                sx={{ width: '40%' }}
                 open={fillNotif}
                 autoHideDuration={4000}
                 message={fillMsg}
