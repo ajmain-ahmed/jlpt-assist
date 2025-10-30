@@ -8,6 +8,8 @@ import SunnySnowingIcon from '@mui/icons-material/SunnySnowing';
 import MenuIcon from '@mui/icons-material/Menu';
 import Menu from '@mui/material/Menu';
 import { redirect } from 'next/navigation';
+import { Google } from '@mui/icons-material';
+import GoogleSignIn from "../serveraction";
 
 const Navbar = () => {
 
@@ -23,12 +25,6 @@ const Navbar = () => {
             redirect('/register')
         }
     }, [session, username])
-
-    useEffect(() => {
-        if (!localStorage.getItem("pullFromDb")) {
-            localStorage.setItem('pullFromDb', 'false')
-        }
-    }, [])
 
     const MobileNavbar = () => {
         const [mobileAnchorEl, setMobileAnchorEl] = React.useState(null);
@@ -50,6 +46,7 @@ const Navbar = () => {
                                 <Box sx={{ display: { xs: 'none', md: 'flex', gap: 5 } }}>
                                     <Button onClick={() => redirect('/vocabulary')} variant='text' sx={{ color: 'white', fontWeight: '600' }}>Vocabulary</Button>
                                     <Button onClick={() => redirect('/test')} variant='text' sx={{ color: 'white', fontWeight: '600' }}>Test</Button>
+                                    <Button onClick={() => redirect('/about')} variant='text' sx={{ color: 'white', fontWeight: '600' }}>About</Button>
                                 </Box>
 
                             </Box>
@@ -83,13 +80,29 @@ const Navbar = () => {
 
                                         </>
                                         :
-                                        <Button
-                                            component={Link}
-                                            sx={{ color: 'white', fontWeight: '700' }}
-                                            href='/login'
-                                        >
-                                            Login
-                                        </Button>
+                                        <>
+                                            <Button
+                                                sx={{ color: 'white', fontWeight: '700' }}
+                                                onClick={(event) => { setAvatarAnchorEl(event.currentTarget) }}
+                                            >
+                                                Login
+                                            </Button>
+                                            <Menu anchorEl={avatarAnchorEl} open={Boolean(avatarAnchorEl)} onClose={() => setAvatarAnchorEl(null)}>
+                                                <MenuItem>
+                                                    <Button
+                                                        onClick={() => GoogleSignIn()}
+                                                        color="error"
+                                                        variant="contained"
+                                                        startIcon={<Google />}
+                                                        sx={{
+                                                            borderRadius: '16px',
+                                                        }}
+                                                    >
+                                                        Login with Google
+                                                    </Button>
+                                                </MenuItem>
+                                            </Menu>
+                                        </>
                                 }
                                 <Menu
                                     sx={{ display: { md: 'none' } }}
@@ -100,6 +113,7 @@ const Navbar = () => {
                                 >
                                     <MenuItem component={Link} href='/vocabulary' sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Vocabulary</MenuItem>
                                     <MenuItem component={Link} href='/test' sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Test</MenuItem>
+                                    <MenuItem component={Link} href='/about' sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>About</MenuItem>
                                 </Menu>
                             </Box>
                         </Box>

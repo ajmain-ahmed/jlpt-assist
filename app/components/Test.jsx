@@ -68,7 +68,7 @@ export default function Test() {
         'ま', 'み', 'む', 'め', 'も',
         'や', 'ゆ', 'よ',
         'ら', 'り', 'る', 'れ', 'ろ',
-        'わ', 'を', 'ん',
+        'わ', 'を', 'ん', 'っ',
 
         // Katakana
         'ア', 'イ', 'ウ', 'エ', 'オ',
@@ -85,7 +85,16 @@ export default function Test() {
         'マ', 'ミ', 'ム', 'メ', 'モ',
         'ヤ', 'ユ', 'ヨ',
         'ラ', 'リ', 'ル', 'レ', 'ロ',
-        'ワ', 'ヲ', 'ン'
+        'ワ', 'ヲ', 'ン',
+
+        // English alphabet (lowercase + uppercase)
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+        'u', 'v', 'w', 'x', 'y', 'z',
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+        'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y', 'Z', '-', '1', '2', '3',
+        '4', '5', '6', '7', '8', '9', '10'
     ]
 
     // fetch user known word ids once status is verified
@@ -686,7 +695,7 @@ export default function Test() {
 
                             <ToggleButton
                                 onClick={() => {
-                                    if (testOn) {
+                                    if (testOn && [...testCards[cardNumber].slug].map(x => (!allKana.includes(x) ? x : null)).filter(x => x != null).length > 0) {
                                         fetchKanji(testCards, cardNumber)
                                         setKanjiDia(true)
                                     }
@@ -697,7 +706,7 @@ export default function Test() {
                             >
                                 <Article
                                     fontSize={matches ? 'medium' : 'medium'}
-                                    color={testOn ? 'error' : ''}
+                                    color={testOn && [...testCards[cardNumber].slug].map(x => (!allKana.includes(x) ? x : null)).filter(x => x != null).length > 0 ? 'error' : ''}
                                 />
                             </ToggleButton>
 

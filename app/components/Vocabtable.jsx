@@ -40,23 +40,6 @@ export default function VocabTable() {
 
     const [untickAllSelect, openUntickAllSelect] = useState(false)
 
-    // show/hide intro dialog based on ls
-    useEffect(() => {
-        if (localStorage.getItem('ShowVocabIntro')) {
-            const choice = JSON.parse(localStorage.getItem('ShowVocabIntro'))
-            if (choice) {
-                toggleIntroDialog(true)
-            }
-            else {
-                setIntroCheckbox(true)
-            }
-        }
-        else {
-            localStorage.setItem('ShowVocabIntro', 'true')
-            toggleIntroDialog(true)
-        }
-    }, [])
-
     // fetch user known word ids once status is verified
     useEffect(() => {
         if (status === 'authenticated' && !flagB.current) {
@@ -230,17 +213,15 @@ export default function VocabTable() {
             }
 
             {/* intro dialog */}
-            <Dialog open={introDialog}>
-                <DialogTitle sx={{ fontSize: '1.25rem', textAlign: 'center', mb: 0 }}>
-                    Vocabulary Table
+            <Dialog open={introDialog} onClose={() => toggleIntroDialog(false)}>
+                <DialogTitle sx={{pb:0}}>
+                    <Typography textAlign="center">
+                        Summary
+                    </Typography>
                 </DialogTitle>
-                <DialogContent sx={{pb:0}}>
+                <DialogContent sx={{ pb: 0 }}>
 
-                    <Box>
-                        <Alert icon={false} severity='info' sx={{ mb: 2, textAlign: 'center', fontSize: { xs: '1rem', md: '1.2rem' } }}>
-                            Tick words you're familiar with, you must be logged in to use the vocabulary table.
-                        </Alert>
-
+                    <Box>   
                         <TableContainer sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2, mb: 2 }}>
                             <Table size={!matches && 'small'} sx={{ width: { xs: '100%', md: '35%' }, border: 2 }}>
                                 <TableHead>
@@ -281,16 +262,6 @@ export default function VocabTable() {
                 </DialogContent>
 
                 <DialogActions sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <Checkbox
-                            checked={introCheckbox}
-                            onChange={() => {
-                                setIntroCheckbox(prev => !prev)
-                                localStorage.setItem('ShowVocabIntro', introCheckbox)
-                            }}
-                        />
-                        <Typography variant='subtitle1'>Don't show on startup</Typography>
-                    </Box>
                     <Button
                         onClick={() => { toggleIntroDialog(false) }}
                         sx={{ fontWeight: 'bold' }}>

@@ -25,7 +25,6 @@ export async function POST(request) {
     const identifier = uid;
     const { success, pending, limit, reset, remaining } = await ratelimit.limit(identifier);
 
-    // if rate limit has been hit
     if (!success) {
         console.log("limit", limit)
         console.log("reset", reset)

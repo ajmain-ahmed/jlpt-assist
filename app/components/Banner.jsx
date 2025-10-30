@@ -9,16 +9,10 @@ import Checkbox from "@mui/material/Checkbox";
 import { redirect } from 'next/navigation';
 import { useRef } from "react";
 import { useSession } from 'next-auth/react';
-import { useVocab } from '../VocabDataProvider';
 
 const Banner = () => {
 
     const MobileHomepage = () => {
-
-        const [vocab, setVocab] = useState(useVocab())
-        const flagB = useRef(false)
-        const [level, setLevel] = useState('all')
-        const [userKnownWordIds, setUserKnownWordIds] = useState([])
 
         const theme = useTheme()
         const matches = useMediaQuery(theme.breakpoints.up('md'))
@@ -103,8 +97,6 @@ const Banner = () => {
         const [tableExpand, toggleTableExpand] = useState(true)
         const [tableExpand2, toggleTableExpand2] = useState(true)
 
-        // quiz type state management
-        const [quizType, setQuizType] = useState('all')
 
         // card state management
         const [cardNumber, setCardNumber] = useState(0)
@@ -159,21 +151,6 @@ const Banner = () => {
 
         }, [exampleWords])
 
-        // fetch user known word ids once status is verified
-        useEffect(() => {
-            if (status === 'authenticated' && username && !flagB.current) {
-                fetch('/api/GetUserVocab')
-                    .then(response => response.json())
-                    .then(data => {
-                        setUserKnownWordIds(data.message.map(x => x.word_id))
-                        console.log('all user known word ids', data.message.map(x => x.word_id))
-                    })
-                    .finally(
-                        flagB.current = true
-                    )
-            }
-        }, [status])
-
         // for the more info button
         const moreInfo = useRef(null)
 
@@ -203,7 +180,7 @@ const Banner = () => {
                             justifyContent: 'center',
                             alignItems: 'center',
                             mt: { md: 15, xs: 10 },
-                            mb: 5
+                            mb: { md: 10, xs: 5}
                         }}>
 
 
@@ -218,7 +195,7 @@ const Banner = () => {
                         </Box>
 
                         {/* Buttons */}
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 6 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 10 }}>
 
                             {/* get started */}
                             <Button
@@ -265,290 +242,246 @@ const Banner = () => {
 
                         </Box>
 
-                        {/* summary table */}
-                        <Paper sx={{ py: 0.2, px: 0.1, borderRadius: '16px', mb: 6, width: { md: '60%', xs: '100%' } }}>
-                            <TableContainer sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 1.5, mb: 1.5 }}>
-                                <Table sx={{ width: { xs: '100%', md: '100%' } }}>
-                                    <TableHead>
-                                        <TableRow>
-                                            {
-                                                ['Level', 'Total', 'Known', 'Completion'].map((x, index) => (
-                                                    <TableCell sx={{ textAlign: 'center', padding: 1, fontWeight: '600', fontSize: { xs: '1rem', md: '1.2rem' } }} key={index}>
-                                                        {x}
-                                                    </TableCell>
-                                                ))
-                                            }
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {Object.keys(vocab).map((x, index) => (
-                                            <TableRow selected={x === level} onClick={() => setLevel(x)} key={index}>
-                                                <TableCell sx={{ textAlign: 'center', padding: 1, fontWeight: '600', fontSize: { xs: '1rem', md: '1.2rem' } }}>
-                                                    {x.toUpperCase()}
-                                                </TableCell>
-                                                <TableCell sx={{ textAlign: 'center', padding: 1, fontWeight: '600', fontSize: { xs: '1rem', md: '1.2rem' } }}>
-                                                    {vocab[x].length}
-                                                </TableCell>
-                                                <TableCell sx={{ textAlign: 'center', padding: 1, fontWeight: '600', fontSize: { xs: '1rem', md: '1.2rem' } }}>
-                                                    {vocab[x].filter(y => userKnownWordIds.includes(y.id)).length}
-                                                </TableCell>
-                                                <TableCell sx={{ textAlign: 'center', padding: 1, fontWeight: '600', fontSize: { xs: '1rem', md: '1.2rem' } }}>
-                                                    {`${Math.floor(
-                                                        (vocab[x].filter(y => userKnownWordIds.includes(y.id)).length /
-                                                            vocab[x].length) * 100
-                                                    )}%`}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Paper>
-
                         {/* card explaining the vocab table */}
-                        <Card sx={{ display: 'flex', flexDirection: 'column', borderRadius: '16px', width: { md: '60%', xs: '100%' } }}>
+                        <Grid container spacing={2}>
+                            <Grid size={matches ? 6 : 12}>
+                                <Card sx={{ display: 'flex', flexDirection: 'column', borderRadius: '16px', mb:3 }}>
 
-                            <CardContent sx={{ paddingBottom: 0 }}>
-                                <Button
-                                    onClick={() => redirect('/vocabulary')}
-                                    variant="contained"
-                                    color="error"
-                                    size="small"
-                                    startIcon={<AutoStoriesIcon />}
-                                    sx={{
-                                        fontWeight: 'bold',
-                                        fontSize: '0.95rem',
-                                        borderRadius: '12px',
-                                        px: 2,
-                                        py: 1
-                                    }}
-                                >
-                                    Vocabulary Tables
-                                </Button>
-                            </CardContent>
-
-                            <CardContent sx={{ paddingBottom: 2 }}>
-                                <Typography sx={{ color: 'grey.600' }}>
-                                    Begin by identifying known vocabulary, split by N-Level.
-                                </Typography>
-                            </CardContent>
-
-                            <Divider />
-
-                            <CardContent>
-                                <Table>
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell sx={{ width: '1%', paddingY: 0, paddingRight: 0, paddingLeft: 1 }}>
-                                                <IconButton onClick={() => toggleTableExpand(prev => !prev)}>
-                                                    {tableExpand ?
-                                                        <KeyboardArrowUp /> :
-                                                        <KeyboardArrowDownIcon />}
-                                                </IconButton>
-                                            </TableCell>
-
-                                            <TableCell sx={{ width: '1%', padding: 0 }}>
-                                                <Checkbox defaultChecked />
-                                            </TableCell>
-
-                                            <TableCell sx={{ width: '98%', textAlign: 'center', pr: 9, fontSize: '1rem', fontWeight: 'bold' }}>
-                                                旅行
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={3}>
-                                                <Collapse in={tableExpand}>
-                                                    <Box sx={{ paddingY: 2 }}>
-                                                        <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>旅行</Typography>
-                                                        <Typography sx={{ color: 'orange', fontSize: '1rem', mt: 1, fontWeight: 'bold' }}>Reading</Typography>
-                                                        <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>りょこう</Typography>
-                                                        <Typography sx={{ color: 'orange', fontSize: '1rem', mt: 1, fontWeight: 'bold' }}>Meaning</Typography>
-                                                        <Typography sx={{ color: 'grey', fontSize: '1rem' }}>Noun, Suru verb, Intransitive verb</Typography>
-                                                        <Typography sx={{ fontSize: '1rem' }}>travel, trip, journey, excursion, tour</Typography>
-                                                    </Box>
-                                                </Collapse>
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-
-                                            <TableCell sx={{ width: '1%', paddingY: 0, paddingRight: 0, paddingLeft: 1 }}>
-                                                <IconButton onClick={() => toggleTableExpand2(prev => !prev)}>
-                                                    {tableExpand2 ?
-                                                        <KeyboardArrowUp /> :
-                                                        <KeyboardArrowDownIcon />}
-                                                </IconButton>
-                                            </TableCell>
-
-                                            <TableCell sx={{ width: '1%', padding: 0 }}>
-                                                <Checkbox />
-                                            </TableCell>
-
-                                            <TableCell sx={{ width: '98%', textAlign: 'center', pr: 9, fontSize: '1rem', fontWeight: 'bold' }}>
-                                                英語
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={3}>
-                                                <Collapse in={tableExpand2}>
-                                                    <Box sx={{ paddingY: 2 }}>
-                                                        <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>英語</Typography>
-                                                        <Typography sx={{ color: 'orange', fontSize: '1rem', mt: 1, fontWeight: 'bold' }}>Reading</Typography>
-                                                        <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>えいご</Typography>
-                                                        <Typography sx={{ color: 'orange', fontSize: '1rem', mt: 1, fontWeight: 'bold' }}>Meaning</Typography>
-                                                        <Typography sx={{ color: 'grey', fontSize: '1rem' }}>Noun</Typography>
-                                                        <Typography sx={{ fontSize: '1rem' }}>English (language)</Typography>
-                                                    </Box>
-                                                </Collapse>
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-
-                        </Card>
-
-                        {/* card explaining the quiz table */}
-                        <Box sx={{ minHeight: { md: 636, xs: 684 }, width: { md: '60%', xs: '100%' } }}>
-                            <Card sx={{ display: 'flex', flexDirection: 'column', mt: 3, borderRadius: '16px' }}>
-
-                                <CardContent sx={{ paddingBottom: 0 }}>
-                                    <Button
-                                        onClick={() => redirect('/test')}
-                                        variant="contained"
-                                        color="error"
-                                        size="small"
-                                        startIcon={<Quiz />}
-                                        sx={{
-                                            fontWeight: 'bold',
-                                            fontSize: '0.95rem',
-                                            borderRadius: '12px',
-                                            px: 2,
-                                            py: 1
-                                        }}
-                                    >
-                                        Flashcards
-                                    </Button>
-                                </CardContent>
-
-                                <CardContent sx={{ paddingBottom: 2 }}>
-                                    <Typography sx={{ color: 'grey.600' }}>
-                                        Run flashcard style tests on all, known or unknown vocabulary words.
-                                    </Typography>
-                                </CardContent>
-
-                                <Divider />
-
-                                <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', pt: 3 }}>
-
-                                    {/* card numbers, right and wrong counters */}
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                        <Button size='small' disableRipple disableFocusRipple startIcon={<Quiz />} variant="outlined" color="info">
-                                            <Typography variant="body1"> Card {cardNumber + 1} / {exampleWords.length} </Typography>
-                                        </Button>
-                                        <Button size='small' startIcon={<DoneOutline />} disableRipple disableFocusRipple variant={(exampleWords[cardNumber].result === true ? 'contained' : 'outlined')} color="success">
-                                            <Typography variant="body1">{correctCount}</Typography>
-                                        </Button>
-
-                                        <Button size='small' startIcon={<CancelOutlined />} disableRipple disableFocusRipple variant={(exampleWords[cardNumber].result === false ? 'contained' : 'outlined')} color="error">
-                                            <Typography variant="body1">{incorrectCount}</Typography>
-                                        </Button>
-                                    </Box>
-
-                                    {/* forward, backwards, eye icon */}
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, paddingTop: 2 }}>
-
+                                    <CardContent sx={{ paddingBottom: 0 }}>
                                         <Button
-                                            size='small'
-                                            variant="outlined"
-                                            color="primary"
-                                            startIcon={<ArrowLeft />}
-                                            onClick={() => changeCard('back')}
-                                        >
-                                            Prev
-                                        </Button>
-
-                                        <Button
-                                            startIcon={<Visibility />}
-                                            disabled={(cardCollapse === true)}
-                                            onClick={() => toggleCardCollapse(true)}
-                                            size='small'
-                                            variant="contained"
-                                            color="primary">
-                                            <Typography>Show</Typography>
-                                        </Button>
-
-                                        <Button
-                                            size='small'
-                                            variant="outlined"
-                                            color="primary"
-                                            endIcon={<ArrowRight />}
-                                            onClick={() => changeCard('forward')}
-                                        >
-                                            Next
-                                        </Button>
-
-                                    </Box>
-
-                                    {/* correct, incorrect buttons */}
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, paddingTop: 2 }}>
-
-                                        <Button
-                                            disabled={cardCollapse === true ? false : true}
-                                            onClick={() => evaluateCard('correct')}
-                                            size='small'
-                                            variant="contained"
-                                            color="success"
-                                            startIcon={<Check />}
-                                        >
-                                            Correct
-                                        </Button>
-                                        <Button
-                                            disabled={cardCollapse === true ? false : true}
-                                            onClick={() => evaluateCard('incorrect')}
-                                            size='small'
+                                            onClick={() => redirect('/vocabulary')}
                                             variant="contained"
                                             color="error"
-                                            startIcon={<Clear />}
+                                            size="small"
+                                            startIcon={<AutoStoriesIcon />}
+                                            sx={{
+                                                fontWeight: 'bold',
+                                                fontSize: '0.95rem',
+                                                borderRadius: '12px',
+                                                px: 2,
+                                                py: 1
+                                            }}
                                         >
-                                            Incorrect
+                                            Vocabulary Tables
                                         </Button>
-
-                                    </Box>
-
-                                </CardContent>
-
-                                <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
-                                    <Typography sx={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                                        {exampleWords[cardNumber].slug}
-                                    </Typography>
-                                </CardContent>
-
-                                {/* content holder for card details */}
-                                <Collapse in={cardCollapse} timeout={{ enter: 400, exit: 10 }}>
-                                    <CardContent sx={{ pt: 0 }}>
-                                        <Box>
-                                            <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}> {exampleWords[cardNumber].slug}</Typography>
-
-                                            <Typography sx={{ color: 'orange', mt: 1, fontWeight: 'bold' }}>Reading</Typography>
-
-                                            {exampleWords[cardNumber].reading.map((x, index) => (
-                                                <Typography sx={{ fontWeight: 'bold' }} key={`reading ${index}`}>{x}</Typography>
-                                            ))}
-
-                                            <Typography sx={{ color: 'orange', mt: 1, fontWeight: 'bold' }}>Meaning</Typography>
-
-                                            {exampleWords[cardNumber].definitions.map((y, index) => (
-                                                <Box sx={{ mb: 1 }} key={`meaning ${index}`}>
-                                                    <Typography sx={{ color: 'grey', fontSize: '1rem' }}>{y.type}</Typography>
-                                                    <Typography sx={{ fontSize: '1rem' }}>{y.meaning}</Typography>
-                                                </Box>
-                                            ))}
-                                        </Box>
                                     </CardContent>
-                                </Collapse>
 
-                            </Card>
-                        </Box>
+                                    <CardContent sx={{ paddingBottom: 2 }}>
+                                        <Typography sx={{ color: 'grey.600' }}>
+                                            Begin by identifying known vocabulary, split by N-Level.
+                                        </Typography>
+                                    </CardContent>
+
+                                    <Divider />
+
+                                    <CardContent>
+                                        <Table>
+                                            <TableBody>
+                                                <TableRow>
+                                                    <TableCell sx={{ width: '1%', paddingY: 0, paddingRight: 0, paddingLeft: 1 }}>
+                                                        <IconButton>
+                                                            <KeyboardArrowUp />
+                                                        </IconButton>
+                                                    </TableCell>
+
+                                                    <TableCell sx={{ width: '1%', padding: 0 }}>
+                                                        <Checkbox defaultChecked />
+                                                    </TableCell>
+
+                                                    <TableCell sx={{ width: '98%', textAlign: 'center', pr: 9, fontSize: '1rem', fontWeight: 'bold' }}>
+                                                        旅行
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow>
+                                                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={3}>
+                                                        <Collapse in={tableExpand}>
+                                                            <Box sx={{ paddingY: 2 }}>
+                                                                <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>旅行</Typography>
+                                                                <Typography sx={{ color: 'orange', fontSize: '1rem', mt: 1, fontWeight: 'bold' }}>Reading</Typography>
+                                                                <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>りょこう</Typography>
+                                                                <Typography sx={{ color: 'orange', fontSize: '1rem', mt: 1, fontWeight: 'bold' }}>Meaning</Typography>
+                                                                <Typography sx={{ color: 'grey', fontSize: '1rem' }}>Noun, Suru verb, Intransitive verb</Typography>
+                                                                <Typography sx={{ fontSize: '1rem' }}>travel, trip, journey, excursion, tour</Typography>
+                                                            </Box>
+                                                        </Collapse>
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow>
+
+                                                    <TableCell sx={{ width: '1%', paddingY: 0, paddingRight: 0, paddingLeft: 1 }}>
+                                                        <IconButton>
+                                                            <KeyboardArrowUp />
+                                                        </IconButton>
+                                                    </TableCell>
+
+                                                    <TableCell sx={{ width: '1%', padding: 0 }}>
+                                                        <Checkbox />
+                                                    </TableCell>
+
+                                                    <TableCell sx={{ width: '98%', textAlign: 'center', pr: 9, fontSize: '1rem', fontWeight: 'bold' }}>
+                                                        英語
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow>
+                                                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={3}>
+                                                        <Collapse in={tableExpand2}>
+                                                            <Box sx={{ paddingY: 2 }}>
+                                                                <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>英語</Typography>
+                                                                <Typography sx={{ color: 'orange', fontSize: '1rem', mt: 1, fontWeight: 'bold' }}>Reading</Typography>
+                                                                <Typography sx={{ fontWeight: 'bold', fontSize: '1rem' }}>えいご</Typography>
+                                                                <Typography sx={{ color: 'orange', fontSize: '1rem', mt: 1, fontWeight: 'bold' }}>Meaning</Typography>
+                                                                <Typography sx={{ color: 'grey', fontSize: '1rem' }}>Noun</Typography>
+                                                                <Typography sx={{ fontSize: '1rem' }}>English (language)</Typography>
+                                                            </Box>
+                                                        </Collapse>
+                                                    </TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+
+                                </Card>
+                            </Grid>
+
+
+                            {/* card explaining the quiz table */}
+                            <Grid size={matches ? 6 : 12}>
+                                <Card sx={{ display: 'flex', flexDirection: 'column', borderRadius: '16px', width: '100%', pb: 2.2 }}>
+
+                                    <CardContent sx={{ paddingBottom: 0 }}>
+                                        <Button
+                                            onClick={() => redirect('/test')}
+                                            variant="contained"
+                                            color="error"
+                                            size="small"
+                                            startIcon={<Quiz />}
+                                            sx={{
+                                                fontWeight: 'bold',
+                                                fontSize: '0.95rem',
+                                                borderRadius: '12px',
+                                                px: 2,
+                                                py: 1
+                                            }}
+                                        >
+                                            Flashcards
+                                        </Button>
+                                    </CardContent>
+
+                                    <CardContent sx={{ paddingBottom: 2 }}>
+                                        <Typography sx={{ color: 'grey.600' }}>
+                                            Run flashcard style tests on all, known or unknown vocabulary words.
+                                        </Typography>
+                                    </CardContent>
+
+                                    <Divider />
+
+                                    <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', pt: 3 }}>
+
+                                        {/* card numbers, right and wrong counters */}
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                            <Button size='small' disableRipple disableFocusRipple startIcon={<Quiz />} variant="outlined" color="info">
+                                                <Typography variant="body1"> Card {cardNumber + 1} / {exampleWords.length} </Typography>
+                                            </Button>
+                                            <Button size='small' startIcon={<DoneOutline />} disableRipple disableFocusRipple variant={(exampleWords[cardNumber].result === true ? 'contained' : 'outlined')} color="success">
+                                                <Typography variant="body1">{correctCount}</Typography>
+                                            </Button>
+
+                                            <Button size='small' startIcon={<CancelOutlined />} disableRipple disableFocusRipple variant={(exampleWords[cardNumber].result === false ? 'contained' : 'outlined')} color="error">
+                                                <Typography variant="body1">{incorrectCount}</Typography>
+                                            </Button>
+                                        </Box>
+
+                                        {/* forward, backwards, eye icon */}
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, paddingTop: 2 }}>
+
+                                            <Button
+                                                size='small'
+                                                variant="outlined"
+                                                color="primary"
+                                                startIcon={<ArrowLeft />}
+                                            >
+                                                Prev
+                                            </Button>
+
+                                            <Button
+                                                startIcon={<Visibility />}
+                                                disabled={(cardCollapse === true)}
+                                                size='small'
+                                                variant="contained"
+                                                color="primary">
+                                                <Typography>Show</Typography>
+                                            </Button>
+
+                                            <Button
+                                                size='small'
+                                                variant="outlined"
+                                                color="primary"
+                                                endIcon={<ArrowRight />}
+                                            >
+                                                Next
+                                            </Button>
+
+                                        </Box>
+
+                                        {/* correct, incorrect buttons */}
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, paddingTop: 2 }}>
+
+                                            <Button
+                                                disabled={cardCollapse === true ? false : true}
+                                                size='small'
+                                                variant="contained"
+                                                color="success"
+                                                startIcon={<Check />}
+                                            >
+                                                Correct
+                                            </Button>
+                                            <Button
+                                                disabled={cardCollapse === true ? false : true}
+                                                size='small'
+                                                variant="contained"
+                                                color="error"
+                                                startIcon={<Clear />}
+                                            >
+                                                Incorrect
+                                            </Button>
+
+                                        </Box>
+
+                                    </CardContent>
+
+                                    <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
+                                        <Typography sx={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                            {exampleWords[cardNumber].slug}
+                                        </Typography>
+                                    </CardContent>
+
+                                    {/* content holder for card details */}
+                                    <Collapse in={true} timeout={{ enter: 400, exit: 10 }}>
+                                        <CardContent sx={{ pt: 0 }}>
+                                            <Box>
+                                                <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}> {exampleWords[cardNumber].slug}</Typography>
+
+                                                <Typography sx={{ color: 'orange', mt: 1, fontWeight: 'bold' }}>Reading</Typography>
+
+                                                {exampleWords[cardNumber].reading.map((x, index) => (
+                                                    <Typography sx={{ fontWeight: 'bold' }} key={`reading ${index}`}>{x}</Typography>
+                                                ))}
+
+                                                <Typography sx={{ color: 'orange', mt: 1, fontWeight: 'bold' }}>Meaning</Typography>
+
+                                                {exampleWords[cardNumber].definitions.map((y, index) => (
+                                                    <Box sx={{ mb: 1 }} key={`meaning ${index}`}>
+                                                        <Typography sx={{ color: 'grey', fontSize: '1rem' }}>{y.type}</Typography>
+                                                        <Typography sx={{ fontSize: '1rem' }}>{y.meaning}</Typography>
+                                                    </Box>
+                                                ))}
+                                            </Box>
+                                        </CardContent>
+                                    </Collapse>
+
+                                </Card>
+                            </Grid>
+                        </Grid>
                     </Box>
                 </Container >
 
