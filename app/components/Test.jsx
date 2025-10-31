@@ -670,7 +670,18 @@ export default function Test() {
                     <Box sx={{ pt: 1 }}>
                         <ToggleButtonGroup disabled={(session) && (!userKnownWordIds)} size={matches ? 'medium' : 'medium'}>
 
-                            <ToggleButton onClick={() => openSettingsDia(true)} size={matches ? 'medium' : 'medium'} sx={{ borderColor: '#d32f2f', px: { md: 1.4, xs: 1.4 } }}>
+                            <ToggleButton
+                                onClick={() => {
+                                    if (status === 'unauthenticated') {
+                                        openSettingsDia(true)
+                                    }
+                                    if (status === 'authenticated' && userKnownWordIds) {
+                                        openSettingsDia(true)
+                                    }
+                                }}
+                                size={matches ? 'medium' : 'medium'}
+                                sx={{ borderColor: '#d32f2f', px: { md: 1.4, xs: 1.4 } }}
+                            >
                                 <SettingsIcon fontSize={matches ? 'medium' : 'medium'} color='error' />
                             </ToggleButton>
 
