@@ -12,7 +12,7 @@ export default function AboutPage() {
         <SessionProvider>
             <Navbar />
             <Container>
-                <Card sx={{ mt: {md:15, xs:5}, borderRadius: '16px' }}>
+                <Card sx={{ mt: {md:10, xs:5}, borderRadius: '16px' }}>
                     <CardContent>
 
                         <Typography sx={{ mb: 2 }} variant={matches ? 'h5' : 'h5'}>
