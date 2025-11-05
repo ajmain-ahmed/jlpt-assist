@@ -827,6 +827,7 @@ export default function Test() {
                         </Box>
                     </Collapse>
 
+                    {/* alerts and summary table */}
                     <Collapse timeout={{ enter: 400, exit: 400 }} in={!testOn}>
 
                         <Alert icon={false} severity='info' sx={{ mb: 1, mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: { xs: '1rem', md: '1.2rem' } }}>
