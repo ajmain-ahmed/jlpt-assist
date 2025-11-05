@@ -100,11 +100,11 @@ const SignUp = () => {
 
   if (status === 'unauthenticated') {
     return (
-      <Container sx={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column'}}>
-        <Typography sx={{mt:10}}>
+      <Container sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+        <Typography sx={{ mt: 10 }}>
           You must be authenticated to access this page.
         </Typography>
-        <Button sx={{mt:2}} onClick={() => redirect('/')}>
+        <Button sx={{ mt: 2 }} onClick={() => redirect('/')}>
           Return to homepage
         </Button>
       </Container>
@@ -112,84 +112,86 @@ const SignUp = () => {
   }
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        width: '100vw',
-        overflow: 'hidden'
-      }}
-    >
-
-      <Paper
-        elevation={3}
+    <Container>
+      <Box
         sx={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          padding: 4,
-          width: '100%',
-          maxWidth: 400,
-          overflow: 'hidden',
+          justifyContent: 'center',
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden'
         }}
       >
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Sign Up with Google
-        </Typography>
 
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
+        <Paper
+          elevation={3}
           sx={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 2,
+            alignItems: 'center',
+            padding: 4,
             width: '100%',
+            maxWidth: 400,
+            overflow: 'hidden',
           }}
         >
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Sign Up with Google
+          </Typography>
 
-          <TextField placeholder="Enter username" id='username' value={username} onChange={(e) => setUsername(e.target.value)} required fullWidth autoFocus />
-          {loading ?
-            <Button variant="contained" fullWidth sx={{ mt: 1 }}>
-              <CircularProgress size="25px" color="inherit" />
-            </Button>
-            :
-            <Button color="error" type="submit" variant="contained" fullWidth sx={{ mt: 1 }}>
-              Create Account
-            </Button>
-          }
           <Box
+            component="form"
+            onSubmit={handleSubmit}
             sx={{
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              fontSize: '0.85rem',
-              mt: 1,
+              flexDirection: 'column',
+              gap: 2,
+              width: '100%',
             }}
           >
-            <Typography>Changed your mind?</Typography>
+
+            <TextField placeholder="Enter username" id='username' value={username} onChange={(e) => setUsername(e.target.value)} required fullWidth autoFocus />
+            {loading ?
+              <Button variant="contained" fullWidth sx={{ mt: 1 }}>
+                <CircularProgress size="25px" color="inherit" />
+              </Button>
+              :
+              <Button color="error" type="submit" variant="contained" fullWidth sx={{ mt: 1 }}>
+                Create Account
+              </Button>
+            }
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                fontSize: '0.85rem',
+                mt: 1,
+              }}
+            >
+              <Typography>Changed your mind?</Typography>
+            </Box>
+            <Button
+              color="error"
+              variant="outlined"
+              onClick={() => {
+                signOutHelper()
+              }}
+              fullWidth
+            >
+              Go Back
+            </Button>
           </Box>
-          <Button
-            color="error"
-            variant="outlined"
-            onClick={() => {
-              signOutHelper()
-            }}
-            fullWidth
-          >
-            Go Back
-          </Button>
-        </Box>
-      </Paper>
-      <Collapse in={alertMsgVisible} sx={{ marginTop: '20px' }}>
-        <Alert severity={alertSeverity}>
-          {alertMsgBody}
-        </Alert>
-      </Collapse>
-    </Box>
+        </Paper>
+        <Collapse in={alertMsgVisible} sx={{ marginTop: '20px' }}>
+          <Alert severity={alertSeverity}>
+            {alertMsgBody}
+          </Alert>
+        </Collapse>
+      </Box>
+    </Container>
   )
 
 }
