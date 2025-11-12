@@ -18,7 +18,7 @@ export default function ProfileComponent() {
     const [user, setUser] = useState()
     const [records, setRecords] = useState()
     const [page, setPage] = useState(0)
-    const itemsPP = 5
+    const itemsPP = 10
     const [vocab, setVocab] = useState(useVocab())
     const flagB = useRef(false)
     const [testDetailDialog, toggleTestDetailDialog] = useState(false)
