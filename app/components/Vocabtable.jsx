@@ -5,6 +5,7 @@ import { Alert, Box, Button, Card, CardContent, Checkbox, CircularProgress, Coll
 import { useSession } from "next-auth/react";
 import React, { useEffect, useRef, useState } from "react"
 import { useVocab } from "../VocabDataProvider";
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 export default function VocabTable() {
 
@@ -14,6 +15,7 @@ export default function VocabTable() {
     const theme = useTheme()
     const matches = useMediaQuery(theme.breakpoints.up('md'));
 
+    const [orgVocab, setOrgVocab] = useState(useVocab())
     const [vocab, setVocab] = useState(useVocab())
 
     const flagA = useRef(false)
@@ -52,6 +54,7 @@ export default function VocabTable() {
                     flagB.current = true
                 )
         }
+        console.log('vocab', vocab)
     }, [status])
 
     // creating a package to send to db for each page
@@ -192,6 +195,7 @@ export default function VocabTable() {
                                         openLevelDia(false)
                                         setPage(1)
                                         setOpen([])
+                                        setVocab(orgVocab)
                                         localStorage.setItem('level', x)
                                         localStorage.setItem('page', 1)
                                     }
@@ -209,53 +213,62 @@ export default function VocabTable() {
                 </Dialog>
             }
 
-            {/* intro dialog */}
+            {/* filter dialog */}
             <Dialog open={introDialog} onClose={() => toggleIntroDialog(false)}>
-                <DialogTitle sx={{pb:0}}>
+                <DialogTitle sx={{ pb: 0 }}>
                     <Typography textAlign="center">
-                        Summary
+                        <strong>Filter Table</strong>
                     </Typography>
                 </DialogTitle>
                 <DialogContent sx={{ pb: 0 }}>
+                    <List sx={{ pt: 0 }}>
 
-                    <Box sx={{pb:2}}>   
-                        <TableContainer sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2, mb: 2 }}>
-                            <Table size={!matches && 'small'} sx={{ width: { xs: '100%', md: '35%' }, border: 2 }}>
-                                <TableHead>
-                                    <TableRow>
-                                        {
-                                            ['Level', 'Total', 'Known', 'Completion'].map((x, index) => (
-                                                <TableCell sx={{ textAlign: 'center', padding: 1 }} key={index}>
-                                                    {x}
-                                                </TableCell>
-                                            ))
-                                        }
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {Object.keys(vocab).map((x, index) => (
-                                        <TableRow selected={x === level} onClick={() => setLevel(x)} key={x}>
-                                            <TableCell sx={{ textAlign: 'center', padding: 1 }}>
-                                                {x.toUpperCase()}
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: 'center', padding: 1 }}>
-                                                {vocab[x].length}
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: 'center', padding: 1 }}>
-                                                {vocab[x].filter(y => userKnownWordIds.includes(y.id)).length}
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: 'center', padding: 1 }}>
-                                                {`${Math.floor(
-                                                    (vocab[x].filter(y => userKnownWordIds.includes(y.id)).length /
-                                                        vocab[x].length) * 100
-                                                )}%`}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Box>
+                        <ListItem sx={{ display: 'flex', flexDirection: 'column' }}>
+                            <ListItemButton
+                                onClick={() => {
+                                    setVocab(orgVocab)
+                                    setPage(1)
+                                    toggleIntroDialog(false)
+                                }}
+
+                            >
+                                <ListItemText sx={{ textAlign: 'center', fontSize: { xs: '0.9rem', md: '1.2rem' } }}>
+                                    All Words
+                                </ListItemText>
+                            </ListItemButton>
+                            <ListItemButton
+                                disabled={
+                                    orgVocab[level].filter(x => userKnownWordIds.includes(x.id)).length === 0
+                                }
+                                onClick={() => {
+                                    const known = orgVocab[level].filter(x => userKnownWordIds.includes(x.id))
+                                    setVocab({ ...orgVocab, [level]: known })
+                                    setPage(1)
+                                    toggleIntroDialog(false)
+                                }}
+                            >
+                                <ListItemText sx={{ textAlign: 'center', fontSize: { xs: '0.9rem', md: '1.2rem' } }}>
+                                    Known Words
+                                </ListItemText>
+                            </ListItemButton>
+                            <ListItemButton
+                                disabled={
+                                    vocab[level].filter(x => !userKnownWordIds.includes(x.id)).length === 0
+                                }
+                                onClick={() => {
+                                    const unknown = orgVocab[level].filter(x => !userKnownWordIds.includes(x.id))
+                                    setVocab({ ...orgVocab, [level]: unknown })
+                                    setPage(1)
+                                    toggleIntroDialog(false)
+                                }}
+                            >
+                                <ListItemText sx={{ textAlign: 'center', fontSize: { xs: '0.9rem', md: '1.2rem' } }}>
+                                    Unknown Words
+                                </ListItemText>
+                            </ListItemButton>
+                        </ListItem>
+
+                    </List>
                 </DialogContent>
             </Dialog>
 
@@ -310,7 +323,7 @@ export default function VocabTable() {
                 <ToggleButtonGroup disabled={!vocab && !adjustedPackage} size={matches ? 'large' : 'medium'}>
 
                     <ToggleButton onClick={() => toggleIntroDialog(true)} sx={{ borderColor: '#d32f2f' }}>
-                        <InfoOutline color='error' />
+                        <FilterAltIcon color='error' />
                     </ToggleButton>
 
                     <ToggleButton onClick={() => openLevelDia(true)} sx={{ borderColor: '#d32f2f' }}>
@@ -439,9 +452,9 @@ export default function VocabTable() {
             </Box>
 
             {(status === 'unauthenticated') &&
-            <Alert sx={{mt:3}} severity="error">
-                Log in to use the vocabulary table
-            </Alert>
+                <Alert sx={{ mt: 3 }} severity="error">
+                    Log in to use the vocabulary table
+                </Alert>
 
             }
 
