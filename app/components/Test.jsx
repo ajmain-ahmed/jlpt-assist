@@ -30,7 +30,8 @@ export default function Test() {
 
     const [level, setLevel] = useState('n1')
     const [type, setType] = useState('all')
-    const [random, setRadnom] = useState(false)
+    const [random, setRandom] = useState(false)
+    const [endless, setEndless] = useState(false)
     const [cardCount, setCardCount] = useState(20)
     const [parcel, setParcel] = useState({ setKnown: [], setUnknown: [] })
 
@@ -138,26 +139,29 @@ export default function Test() {
 
     // detects when all cards have either a true/false result, and fills in the parcel
     useEffect(() => {
-        // fill in parcel
-        if (testCards && session) {
-            const correctCards = testCards.filter(x => x.result === true)
-            const incorrectCards = testCards.filter(x => x.result === false)
-            const toBeCorrect = correctCards.filter(x => !userKnownWordIds.includes(x.id))
-            const toBeinCorrect = incorrectCards.filter(x => userKnownWordIds.includes(x.id))
-            setParcel({ setKnown: toBeCorrect, setUnknown: toBeinCorrect })
-        }
 
-        // detect when test is over
-        if (testCards && testCards.map(x => x.result).filter(y => y === null).length === 0) {
-            if (!testComplete) {
-                if (parcel.setKnown.length === 0 && parcel.setUnknown.length === 0) {
-                    setSaveToVT(false)
+        if (!endless) {
+
+            // fill in parcel
+            if (testCards && session) {
+                const correctCards = testCards.filter(x => x.result === true)
+                const incorrectCards = testCards.filter(x => x.result === false)
+                const toBeCorrect = correctCards.filter(x => !userKnownWordIds.includes(x.id))
+                const toBeinCorrect = incorrectCards.filter(x => userKnownWordIds.includes(x.id))
+                setParcel({ setKnown: toBeCorrect, setUnknown: toBeinCorrect })
+            }
+
+            // detect when test is over
+            if (testCards && testCards.map(x => x.result).filter(y => y === null).length === 0) {
+                if (!testComplete) {
+                    if (parcel.setKnown.length === 0 && parcel.setUnknown.length === 0) {
+                        setSaveToVT(false)
+                    }
+                    setTestComplete(true)
+                    openResultsDia(true)
                 }
-                setTestComplete(true)
-                openResultsDia(true)
             }
         }
-
     }, [testCards])
 
     // preventing a level/type bug
@@ -339,7 +343,7 @@ export default function Test() {
 
             {/* kanji dialog */}
             <Dialog sx={{}} fullWidth={true} maxWidth={matches ? 'xs' : 'xl'} open={kanjiDia} onClose={() => setKanjiDia(false)}>
-                <DialogContent sx={{pb:4}}>
+                <DialogContent sx={{ pb: 4 }}>
                     <Paper sx={{ mt: 1, borderRadius: '16px', py: 1.5, px: 2 }}>
                         <TableContainer>
                             <Table size="small">
@@ -466,8 +470,14 @@ export default function Test() {
                                 <FormControlLabel
                                     disabled={testOn}
                                     control={<Switch checked={random} size={matches ? 'medium' : 'small'} color='error' />}
-                                    label="Randomise card order"
-                                    onChange={() => setRadnom(prev => !prev)}
+                                    label="Randomise order"
+                                    onChange={() => setRandom(prev => !prev)}
+                                />
+                                <FormControlLabel
+                                    disabled={testOn}
+                                    control={<Switch checked={endless} size={matches ? 'medium' : 'small'} color='error' />}
+                                    label="Endless test"
+                                    onChange={() => setEndless(prev => !prev)}
                                 />
                             </Box>
 
@@ -647,6 +657,7 @@ export default function Test() {
                 onClose={() => toggleFillNotif(false)}
             />
 
+            {/* toolbar, prev next show buttons, summary table + card */}
             <Paper sx={{ mt: 5, borderRadius: '16px', py: 1.5, px: 2, mb: 10 }}>
                 <Box sx={{ textAlign: 'center' }}>
 
@@ -720,13 +731,16 @@ export default function Test() {
                         </ToggleButtonGroup>
                     </Box>
 
-                    {/* prev next show buttons */}
+                    {/* prev next show correct incorrect buttons */}
                     <Collapse timeout={{ enter: 400, exit: 0 }} in={testOn}>
                         {(testOn && testCards) &&
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 1, pb: 1.5, pt: 1.5 }}>
-                                <Button size={matches ? 'large' : 'small'} startIcon={<Quiz />} variant="outlined" color="info">
-                                    <Typography variant="body1">{`${cardNumber + 1} / ${testCards.length}`}</Typography>
-                                </Button>
+                                {
+                                    (!endless) &&
+                                    <Button size={matches ? 'large' : 'small'} startIcon={<Quiz />} variant="outlined" color="info">
+                                        <Typography variant="body1">{`${cardNumber + 1} / ${testCards.length}`}</Typography>
+                                    </Button>
+                                }
 
                                 <Button size={matches ? 'large' : 'small'} startIcon={<DoneOutline />} disableRipple disableFocusRipple variant={testCards[cardNumber].result === true ? 'contained' : 'outlined'} color="success">
                                     <Typography variant="body1">{testCards.map(x => x.result).filter(y => y === true).length}</Typography>
@@ -783,12 +797,27 @@ export default function Test() {
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                             <Button
                                 onClick={() => {
-                                    setTestCards(prev =>
-                                        prev.map((card, index) => {
-                                            return index === cardNumber ? { ...card, result: true } : card
-                                        })
-                                    )
-                                    if (cardNumber < testCards.length - 1) {
+
+                                    // set card result
+                                    if (!endless) {
+                                        setTestCards(prev =>
+                                            prev.map((card, index) => {
+                                                return index === cardNumber ? { ...card, result: true } : card
+                                            })
+                                        )
+                                    }
+
+                                    // if correct card and endless test, move card to the back
+                                    if (endless) {
+                                        toggleShowCard(false)
+                                        // get rid of current card
+                                        const filtered = testCards.filter(x => x.slug != testCards[cardNumber].slug)
+                                        const addBack = { ...testCards[cardNumber], result: true }
+                                        const reordered = [...filtered, addBack]
+                                        setTestCards(reordered)
+                                    }
+
+                                    if ((cardNumber < testCards.length - 1) && !endless) {
                                         toggleShowCard(false)
                                         setCardNumber(prev => prev + 1)
                                     }
@@ -803,12 +832,26 @@ export default function Test() {
                             </Button>
                             <Button
                                 onClick={() => {
-                                    setTestCards(prev =>
-                                        prev.map((card, index) => {
-                                            return index === cardNumber ? { ...card, result: false } : card
-                                        })
-                                    )
-                                    if (cardNumber < testCards.length - 1) {
+
+                                    if (!endless) {
+                                        setTestCards(prev =>
+                                            prev.map((card, index) => {
+                                                return index === cardNumber ? { ...card, result: false } : card
+                                            })
+                                        )
+                                    }
+
+                                    // if incorrect card and endless test, move card 4 places back
+                                    if (endless) {
+                                        toggleShowCard(false)
+                                        let copy = [...testCards]
+                                        let temp = { ...copy[0], result: false }
+                                        copy = copy.filter(x => x.slug != copy[cardNumber].slug)
+                                        copy.splice(4, 0, temp)
+                                        setTestCards(copy)
+                                    }
+
+                                    if ((cardNumber < testCards.length - 1) && !endless) {
                                         toggleShowCard(false)
                                         setCardNumber(prev => prev + 1)
                                     }
@@ -827,9 +870,19 @@ export default function Test() {
                     {/* alerts and summary table */}
                     <Collapse timeout={{ enter: 400, exit: 400 }} in={!testOn}>
 
-                        <Alert icon={false} severity='info' sx={{ mb: 1, mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: { xs: '1rem', md: '1.2rem' } }}>
-                            Set the test configuration before running.
-                        </Alert>
+                        <Typography
+                            sx={{
+                                mb: 1,
+                                mt: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                textAlign: 'center',
+                                fontSize: { xs: '1rem', md: '1.2rem' }
+                            }}
+                        >
+                            Set test configuration before running.
+                        </Typography>
 
                         {(status === 'unauthenticated') &&
                             <Alert sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} severity="error" icon={false}>
@@ -887,9 +940,9 @@ export default function Test() {
                             </Typography>
                         </Box>
                     </Collapse>
-
                 </Box>
 
+                {/* card details */}
                 <Collapse timeout={{ enter: 250, exit: 0 }} in={(showCard)}>
                     {(testCards) &&
                         <Box sx={{ py: 1 }}>
@@ -936,6 +989,7 @@ export default function Test() {
                 </Collapse>
 
             </Paper>
+
         </Container>
     );
 }

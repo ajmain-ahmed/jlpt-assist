@@ -49,6 +49,7 @@ export default function VocabTable() {
                 .then(response => response.json())
                 .then(data => {
                     setUserKnownWordIds(data.message.map(x => x.word_id))
+                    console.log('resp', data.message.map(x => x.word_id))
                 })
                 .finally(
                     flagB.current = true
