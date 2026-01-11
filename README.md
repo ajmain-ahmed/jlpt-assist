@@ -44,7 +44,5 @@ Create .env.local file with credentials for the following:
 - SUPABASE_URL
 - SUPABASE_SERVICE_KEY
 
-Note: Supabase anon key is not used in this app, all DB operations are server-side
-
 Start dev server:
 npm run dev
